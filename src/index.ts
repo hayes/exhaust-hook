@@ -1,6 +1,6 @@
 import asyncHooks from 'async_hooks';
 
-const counters = new Map<number, { counter: Counter; type: string; parentId: number }>();
+const counters = new Map<number, Counter>();
 const activeCounters = new Set<Counter>();
 let enabled = false;
 
@@ -9,8 +9,8 @@ const hook = asyncHooks.createHook({
     const counter = counters.get(parentId);
 
     if (counter !== undefined) {
-      counters.set(id, { counter: counter.counter, type, parentId });
-      counter.counter.add(id);
+      counters.set(id, counter);
+      counter.add(id);
     }
   },
   destroy: id => {
@@ -18,7 +18,7 @@ const hook = asyncHooks.createHook({
 
     if (counter !== undefined) {
       counters.delete(id);
-      counter.counter.delete(id);
+      counter.delete(id);
     }
   },
 });
@@ -55,11 +55,7 @@ class Counter extends Set<number> {
 
   start<T>(fn: () => T) {
     const id = asyncHooks.executionAsyncId();
-    counters.set(id, {
-      counter: this,
-      type: 'root',
-      parentId: asyncHooks.triggerAsyncId(),
-    });
+    counters.set(id, this);
 
     const result = fn();
 
