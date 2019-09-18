@@ -1,0 +1,40 @@
+# ExhaustHook
+
+This module uses async_hooks to allow wrapping a function so that it will resolve a promise once all
+async activity kicked off by that function has completed.
+
+## Api
+
+### `ExhaustHook.run<T>(fn: () => Promise<T> | T, timeout?: number): Promise<T>`
+
+-   `fn`: A function which will be executed asynchronously. Returns a promise with the resolved
+    return value of `fn` after all async activity started by `fn` has completed.
+-   `timeout:` An optional timeout. If async activity for started by `fn` has not completed before
+    the timeout the returned promise will be rejected with a timeout error.
+
+## Example
+
+```ts
+async function example() {
+    const steps: string[] = [];
+
+    const result = await ExhaustAsync.run(() => {
+        steps.push('start');
+        setTimeout(() => {
+            steps.push('timeout 1');
+
+            setTimeout(() => {
+                steps.push('timeout 2');
+            }, 0);
+        }, 0);
+
+        return 'returned';
+    }, 100);
+
+    steps.push('resolved');
+
+    console.log(steps); // ['start', 'timeout 1', 'timeout 2', 'resolved']
+}
+
+example();
+```

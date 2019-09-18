@@ -1,0 +1,16 @@
+{
+  "counters": [
+    {
+      "key": 255,
+      "values": {},
+      "type": "root",
+      "parentId": 254
+    },
+    {
+      "key": 275,
+      "values": {},
+      "type": "PROMISE",
+      "parentId": 255
+    }
+  ]
+}
