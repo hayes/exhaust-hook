@@ -10,6 +10,8 @@ async activity kicked off by that function has completed.
 ## Example
 
 ```ts
+import ExhaustAsync from 'exhaust-hook';
+
 async function example() {
     const steps: string[] = [];
 
