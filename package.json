@@ -14,6 +14,7 @@
     "jest": "NODE_ENV=test TZ=UTC nimbus jest",
     "jest:coverage": "yarn run jest -- --coverage",
     "test": "yarn run jest:coverage",
+    "prepack": "yarn build",
     "prettier": "nimbus prettier",
     "type": "nimbus typescript --noEmit",
     "pretest": "yarn run type"
