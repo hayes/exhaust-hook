@@ -3,14 +3,9 @@
 This module uses async_hooks to allow wrapping a function so that it will resolve a promise once all
 async activity kicked off by that function has completed.
 
-## Api
+## Install
 
-### `ExhaustHook.run<T>(fn: () => Promise<T> | T, timeout?: number): Promise<T>`
-
--   `fn`: A function which will be executed asynchronously. Returns a promise with the resolved
-    return value of `fn` after all async activity started by `fn` has completed.
--   `timeout:` An optional timeout. If async activity for started by `fn` has not completed before
-    the timeout the returned promise will be rejected with a timeout error.
+`yarn add exhaust-hook` or `npm install --save exhaust-hook`
 
 ## Example
 
@@ -38,3 +33,12 @@ async function example() {
 
 example();
 ```
+
+## Api
+
+### `ExhaustHook.run<T>(fn: () => Promise<T> | T, timeout?: number): Promise<T>`
+
+-   `fn`: A function which will be executed asynchronously. Returns a promise with the resolved
+    return value of `fn` after all async activity started by `fn` has completed.
+-   `timeout:` An optional timeout. If async activity for started by `fn` has not completed before
+    the timeout the returned promise will be rejected with a timeout error.
