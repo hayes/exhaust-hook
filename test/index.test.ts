@@ -1,5 +1,14 @@
 import ExhaustAsync from '../src';
 
+function runAsyncCall(done: () => void) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      done();
+      resolve();
+    }, 5);
+  });
+}
+
 describe('exhaust-async', () => {
   test('it works', async () => {
     const steps: string[] = [];
@@ -112,18 +121,9 @@ describe('exhaust-async', () => {
   });
 
   test('runAsync from rut', async () => {
-    function runAsyncCall(done: () => void) {
-      return new Promise(resolve => {
-        setTimeout(() => {
-          done();
-          resolve();
-        }, 50);
-      });
-    }
-
     const steps: string[] = [];
 
-    const result = await ExhaustAsync.run(async () => {
+    const result = await ExhaustAsync.run(() => {
       steps.push('start');
 
       runAsyncCall(() => {

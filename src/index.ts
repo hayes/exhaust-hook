@@ -118,6 +118,32 @@ const ExhaustHook = {
       return promise;
     });
   },
+  runSync<T>(fn: () => T, timeout?: number): Promise<T> {
+    let counter!: Counter;
+
+    let result: T;
+    const promise = new Promise<T>((resolve, reject) => {
+      let timer: NodeJS.Timeout;
+
+      if (timeout) {
+        timer = setTimeout(() => {
+          reject(new Error(`ExhaustHook.run timed out after ${timeout}ms`));
+        }, timeout);
+        timer.unref();
+      }
+
+      counter = new Counter(() => {
+        if (timer) {
+          clearTimeout(timer);
+        }
+        resolve(result);
+      });
+    });
+
+    result = counter.start(fn);
+
+    return promise;
+  },
 };
 
 export default ExhaustHook;
