@@ -91,38 +91,12 @@ class Counter extends Set<number> {
 
 const ExhaustHook = {
   run<T>(fn: () => Promise<T> | T, timeout?: number): Promise<T> {
-    let counter!: Counter;
-
     return Promise.resolve().then(async () => {
-      let result: T;
-      const promise = new Promise<T>((resolve, reject) => {
-        let timer: NodeJS.Timeout;
-
-        if (timeout) {
-          timer = setTimeout(() => {
-            reject(new Error(`ExhaustHook.run timed out after ${timeout}ms`));
-          }, timeout);
-          timer.unref();
-        }
-
-        counter = new Counter(() => {
-          if (timer) {
-            clearTimeout(timer);
-          }
-          resolve(result);
-        });
-      });
-
-      result = await counter.start(fn);
-
-      return promise;
+      return ExhaustHook.runSync(fn, timeout);
     });
   },
   runSync<T>(fn: () => T, timeout?: number): Promise<T> {
-    let counter!: Counter;
-
-    let result: T;
-    const promise = new Promise<T>((resolve, reject) => {
+    return new Promise<T>((resolve, reject) => {
       let timer: NodeJS.Timeout;
 
       if (timeout) {
@@ -132,17 +106,17 @@ const ExhaustHook = {
         timer.unref();
       }
 
-      counter = new Counter(() => {
+      let result: T;
+
+      const counter = new Counter(() => {
         if (timer) {
           clearTimeout(timer);
         }
         resolve(result);
       });
+
+      result = counter.start(fn);
     });
-
-    result = counter.start(fn);
-
-    return promise;
   },
 };
 
