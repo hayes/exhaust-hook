@@ -2,28 +2,28 @@ import asyncHooks from 'async_hooks';
 
 const counters = new Map<number, Counter>();
 const activeCounters = new Set<Counter>();
-let enabled = false;
+let hookEnabled = false;
 
 const hook = asyncHooks.createHook({
   init: (id, type, parentId) => {
     const counter = counters.get(parentId);
 
-    if (counter !== undefined) {
-      counters.set(id, counter);
-      counter.add(id);
+    if (counter && counter.active) {
+      counter.init(id, type, parentId);
     }
   },
   destroy: id => {
     const counter = counters.get(id);
 
-    if (counter !== undefined) {
-      counters.delete(id);
-      counter.delete(id);
+    if (counter && counter.active) {
+      counter.destroy(id);
     }
   },
 });
 
 class Counter extends Set<number> {
+  active = true;
+
   private resolve: () => void;
 
   constructor(resolve: () => void) {
@@ -32,25 +32,41 @@ class Counter extends Set<number> {
 
     activeCounters.add(this);
 
-    if (!enabled) {
+    if (!hookEnabled) {
+      hookEnabled = true;
       hook.enable();
-      enabled = true;
     }
   }
 
-  delete(id: number) {
-    const result = super.delete(id);
+  init(id: number, type: string, parentId: number) {
+    counters.set(id, this);
+    this.add(id);
 
-    if (this.size === 0) {
-      this.resolve();
+    if (type === 'PROMISE') {
+      setTimeout(() => {
+        this.delete(id);
+      });
+    }
+  }
+
+  destroy(id: number) {
+    counters.delete(id);
+    this.delete(id);
+
+    this.checkFinished();
+  }
+
+  checkFinished() {
+    if (this.active && this.size === 0) {
+      this.active = false;
       activeCounters.delete(this);
 
       if (activeCounters.size === 0) {
+        hookEnabled = false;
         hook.disable();
       }
+      this.resolve();
     }
-
-    return result;
   }
 
   start<T>(fn: () => T) {
@@ -60,6 +76,10 @@ class Counter extends Set<number> {
     const result = fn();
 
     counters.delete(id);
+
+    setTimeout(() => {
+      this.checkFinished();
+    });
 
     return result;
   }
@@ -72,16 +92,16 @@ class Counter extends Set<number> {
 const ExhaustHook = {
   run<T>(fn: () => Promise<T> | T, timeout?: number): Promise<T> {
     let counter!: Counter;
+
     return Promise.resolve().then(async () => {
       let result: T;
       const promise = new Promise<T>((resolve, reject) => {
         let timer: NodeJS.Timeout;
 
         if (timeout) {
-          timer = setTimeout(
-            () => reject(new Error(`ExhaustHook.run timed out after ${timeout}ms`)),
-            timeout,
-          );
+          timer = setTimeout(() => {
+            reject(new Error(`ExhaustHook.run timed out after ${timeout}ms`));
+          }, timeout);
           timer.unref();
         }
 
