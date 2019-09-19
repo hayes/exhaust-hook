@@ -1,6 +1,6 @@
 {
   "name": "exhaust-hook",
-  "version": "1.0.0-alpha.4",
+  "version": "1.0.0-alpha.5",
   "description": "Use async_hooks to create a callback when async activity has finished",
   "main": "lib/index.js",
   "author": "Michael Hayes",
